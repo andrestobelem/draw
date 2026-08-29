@@ -73,7 +73,7 @@ There is no automated test suite or build command in this repository today. Brow
 - Avoid adding dependencies for functionality already available in the browser.
 - Keep source files readable and avoid generated artifacts.
 
-Commit rules are recorded in [`AGENTS.md`](../AGENTS.md): use Conventional Commits, keep commits atomic, use simplified English, and do not add authorship trailers.
+Commit rules are recorded in [`AGENTS.md`](../AGENTS.md): use scoped Conventional Commits, keep commits atomic, use simplified English, and do not add authorship trailers.
 
 ## Static release checklist
 
