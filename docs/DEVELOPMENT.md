@@ -142,4 +142,4 @@ Release checklist:
 
 The renderer has no server-side configuration or environment variables. The local Bun server accepts only the optional `PORT`; browser deployment only needs a web server. GitHub releases remain unsigned, so macOS may show a Gatekeeper warning on first launch.
 
-The current published release is [`v1.0.0`](https://github.com/andrestobelem/draw/releases/tag/v1.0.0) and predates the workflow's annotated-tag validation. See [`README.md`](../README.md) for the user-facing download path and [`USER_GUIDE.md`](USER_GUIDE.md) for app usage.
+The current published release is [`v1.0.1`](https://github.com/andrestobelem/draw/releases/tag/v1.0.1). See [`README.md`](../README.md) for the user-facing download path and [`USER_GUIDE.md`](USER_GUIDE.md) for app usage.
