@@ -43,6 +43,7 @@ async function serveFile(pathname) {
 
 Bun.serve({
   port,
+  hostname: "127.0.0.1",
   fetch(request) {
     return serveFile(new URL(request.url).pathname);
   },
