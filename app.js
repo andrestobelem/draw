@@ -492,6 +492,11 @@
     updateGrid();
   }
 
+  function replaceState(nextState) {
+    state = nextState;
+    applyTheme();
+  }
+
   function watchSystemTheme() {
     if (typeof window.matchMedia !== "function") return;
     systemThemeQuery = window.matchMedia("(prefers-color-scheme: dark)");
@@ -1959,8 +1964,7 @@
       confirmLabel: "Start new",
       cancelLabel: "Keep drawing",
     }))) return;
-    state = createInitialState();
-    applyTheme();
+    replaceState(createInitialState());
     history = [];
     redoHistory = [];
     const size = getCanvasSize();
@@ -1991,8 +1995,7 @@
     if (!file) return;
     try {
       const raw = JSON.parse(await file.text());
-      state = normalizeState(raw);
-      applyTheme();
+      replaceState(normalizeState(raw));
       history = [];
       redoHistory = [];
       if (!isFiniteNumber(state.appState.viewX)) state.appState.viewX = getCanvasSize().width / 2;
