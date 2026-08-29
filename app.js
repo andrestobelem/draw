@@ -75,6 +75,7 @@
   const zoomValue = document.querySelector("#zoom-value");
   const pointerMode = document.querySelector("#pointer-mode");
   const saveStatus = document.querySelector("#save-status");
+  const saveDot = document.querySelector("#save-dot");
   const toast = document.querySelector("#toast");
   const eraserCursor = document.querySelector("#eraser-cursor");
   const helpModal = document.querySelector("#help-modal");
@@ -1959,6 +1960,7 @@
       cancelLabel: "Keep drawing",
     }))) return;
     state = createInitialState();
+    applyTheme();
     history = [];
     redoHistory = [];
     const size = getCanvasSize();
@@ -1990,6 +1992,7 @@
     try {
       const raw = JSON.parse(await file.text());
       state = normalizeState(raw);
+      applyTheme();
       history = [];
       redoHistory = [];
       if (!isFiniteNumber(state.appState.viewX)) state.appState.viewX = getCanvasSize().width / 2;
