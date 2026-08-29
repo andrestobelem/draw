@@ -492,9 +492,16 @@
     updateGrid();
   }
 
-  function replaceState(nextState) {
-    state = nextState;
+  function replaceState(nextState = createInitialState()) {
+    state = normalizeState(nextState);
+    history = [];
+    redoHistory = [];
+    const size = getCanvasSize();
+    if (!isFiniteNumber(state.appState.viewX)) state.appState.viewX = size.width / 2;
+    if (!isFiniteNumber(state.appState.viewY)) state.appState.viewY = size.height / 2;
+    closePopovers();
     applyTheme();
+    renderAll();
   }
 
   function watchSystemTheme() {
@@ -1964,14 +1971,7 @@
       confirmLabel: "Start new",
       cancelLabel: "Keep drawing",
     }))) return;
-    replaceState(createInitialState());
-    history = [];
-    redoHistory = [];
-    const size = getCanvasSize();
-    state.appState.viewX = size.width / 2;
-    state.appState.viewY = size.height / 2;
-    closePopovers();
-    renderAll();
+    replaceState();
     showToast("New drawing created");
   }
 
@@ -1995,13 +1995,7 @@
     if (!file) return;
     try {
       const raw = JSON.parse(await file.text());
-      replaceState(normalizeState(raw));
-      history = [];
-      redoHistory = [];
-      if (!isFiniteNumber(state.appState.viewX)) state.appState.viewX = getCanvasSize().width / 2;
-      if (!isFiniteNumber(state.appState.viewY)) state.appState.viewY = getCanvasSize().height / 2;
-      closePopovers();
-      renderAll();
+      replaceState(raw);
       showToast("Sketch opened");
     } catch {
       showToast("That file could not be opened");
