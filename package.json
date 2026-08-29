@@ -1,0 +1,10 @@
+{
+  "name": "draw",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A focused, hand-drawn whiteboard for sketches and ideas.",
+  "scripts": {
+    "dev": "python3 -m http.server 4173",
+    "start": "python3 -m http.server 4173"
+  }
+}
