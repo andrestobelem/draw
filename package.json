@@ -3,8 +3,47 @@
   "version": "1.0.0",
   "private": true,
   "description": "A focused, hand-drawn whiteboard for sketches and ideas.",
+  "author": "Andrés Tobelem",
+  "packageManager": "bun@1.4.0",
+  "engines": {
+    "bun": ">=1.4.0"
+  },
+  "main": "electron/main.cjs",
   "scripts": {
-    "dev": "python3 -m http.server 4173",
-    "start": "python3 -m http.server 4173"
+    "dev": "bun run web",
+    "web": "bun run server.mjs",
+    "start": "bun run desktop",
+    "desktop": "electron .",
+    "desktop:dir": "electron-builder --mac --dir --publish never",
+    "package:mac": "electron-builder --mac --publish never",
+    "check": "node --check app.js && node --check server.mjs && node --check electron/main.cjs"
+  },
+  "devDependencies": {
+    "electron": "^44.0.0",
+    "electron-builder": "^26.15.3"
+  },
+  "build": {
+    "appId": "com.andrestobelem.draw",
+    "productName": "draw",
+    "asar": true,
+    "files": [
+      "index.html",
+      "styles.css",
+      "app.js",
+      "electron/**/*",
+      "LICENSE"
+    ],
+    "directories": {
+      "output": "dist"
+    },
+    "mac": {
+      "identity": null,
+      "icon": "build/icon.icns",
+      "category": "public.app-category.graphics-design",
+      "target": [
+        "dmg",
+        "zip"
+      ]
+    }
   }
 }

@@ -2,47 +2,64 @@
 
 ## Project shape
 
-`draw` is a dependency-free static web app.
+`draw` has a dependency-free browser renderer and a small Electron desktop shell.
 
 ```text
 .
-├── index.html          App shell and static controls
+├── index.html          Browser and desktop app shell
 ├── styles.css          Layout, components, themes, and responsive rules
 ├── app.js              State, rendering, input, history, and persistence
-├── package.json        Optional local-server scripts
+├── server.mjs          Bun development server
+├── electron/
+│   └── main.cjs        Secure Electron main process
+├── build/
+│   └── icon.icns       macOS app icon
+├── package.json        Bun scripts and Electron Builder configuration
+├── bun.lock            Locked JavaScript toolchain
 ├── README.md           Project overview
 └── docs/
     ├── DEVELOPMENT.md  Development and release guide
     └── USER_GUIDE.md   User-facing guide
 ```
 
-There is no bundler, framework, backend, or generated source directory.
+The renderer has no framework, backend, or bundler. Electron Builder packages the same static renderer with the desktop entrypoint. Generated artifacts are written to `dist/`, which is ignored by Git.
 
-## Local development
+## Tooling
 
-Start the local server from the repository root:
-
-```sh
-npm run dev
-```
-
-Or use Python directly:
+Use Bun `1.4` or newer for project commands:
 
 ```sh
-python3 -m http.server 4173
+bun install
+bun run check
 ```
 
-Open <http://127.0.0.1:4173> and test the app through the browser. Do not open `index.html` directly when testing persistence, file imports, sharing, or other browser security-sensitive behavior.
+Run the browser version:
+
+```sh
+bun run web
+```
+
+Open <http://127.0.0.1:4173>. Do not open `index.html` directly when testing persistence, file imports, sharing, or other browser security-sensitive behavior.
+
+Run the desktop version:
+
+```sh
+bun run desktop
+```
+
+The desktop shell loads `index.html` directly. The renderer keeps Node integration disabled, enables context isolation, and runs in a sandboxed window. The main process does not expose an IPC bridge because the current app only needs browser APIs.
 
 ## Implementation notes
 
 - The app keeps document data in a single state object containing the drawing name, elements, and app state.
 - History stores complete snapshots for document and style state. View navigation (`zoom`, `viewX`, `viewY`) is transient and is not part of undo and redo snapshots.
 - Browser local storage persists the current document, history, redo history, and profile data.
+- The browser and desktop builds use separate local storage profiles because their origins and storage locations differ.
 - Canvas coordinates are transformed through the current view offset and zoom.
 - The inspector renders controls from the current selection and app defaults.
 - The mobile inspector is a clipped drawer. The workspace owns the positioning context so the closed drawer does not expand the page width.
 - Export uses browser downloads. Share uses the Web Share API when available and clipboard text as the fallback.
+- `electron/main.cjs` only owns the application window lifecycle. Keep renderer behavior in the existing browser files unless native integration is required.
 
 When changing an exported symbol, inspect all references before editing it. Keep state transitions in the existing history path instead of adding one-off mutations.
 
@@ -51,7 +68,7 @@ When changing an exported symbol, inspect all references before editing it. Keep
 Run the JavaScript syntax check:
 
 ```sh
-node --check app.js
+bun run check
 ```
 
 Then run the app and exercise the changed behavior on the real canvas. At minimum, check the relevant path plus:
@@ -62,8 +79,9 @@ Then run the app and exercise the changed behavior on the real canvas. At minimu
 - Theme and profile controls.
 - Eraser cursor and edge hit testing.
 - Mobile layout at a narrow viewport, including the inspector drawer.
+- Electron launch and local storage in the desktop profile.
 
-There is no automated test suite or build command in this repository today. Browser smoke checks are the release gate for behavior changes.
+There is no automated test suite or renderer build command in this repository. Browser and desktop smoke checks are the release gate for behavior changes.
 
 ## Editing rules
 
@@ -75,14 +93,30 @@ There is no automated test suite or build command in this repository today. Brow
 
 Commit rules are recorded in [`AGENTS.md`](../AGENTS.md): use scoped Conventional Commits, keep commits atomic, use simplified English, and do not add authorship trailers.
 
-## Static release checklist
+## macOS desktop release
 
-1. Run `node --check app.js`.
-2. Start the local server and verify the changed behavior in a browser.
-3. Test a narrow viewport and a desktop viewport.
-4. Test exporting and reopening a JSON file.
-5. Confirm that no debug UI or temporary files are included.
-6. Serve the static files from the deployment host.
-7. Review the MIT terms in [`LICENSE`](../LICENSE) before public redistribution.
+Build an unpacked app for a local smoke test:
 
-The app has no server-side configuration or environment variables. Deployment only needs a web server that can serve `index.html`, `styles.css`, and `app.js`.
+```sh
+bun run desktop:dir
+```
+
+Build unsigned macOS distributables:
+
+```sh
+bun run package:mac
+```
+
+Electron Builder writes the `.dmg` and `.zip` artifacts to `dist/`. The current configuration targets the host macOS architecture and does not configure code signing, notarization, Windows, or Linux targets.
+
+Release checklist:
+
+1. Run `bun install --frozen-lockfile` from the committed `bun.lock`.
+2. Run `bun run check`.
+3. Verify the browser version in a narrow and desktop viewport.
+4. Verify the Electron app launches and renders the same drawing surface.
+5. Test exporting and reopening a JSON file in both environments.
+6. Run `bun run package:mac` and inspect the generated artifacts.
+7. Review the MIT terms in [`LICENSE`](../LICENSE).
+
+The app has no server-side configuration or environment variables. Browser deployment only needs a web server. Desktop packaging only needs macOS, Bun, and the locked dependencies.

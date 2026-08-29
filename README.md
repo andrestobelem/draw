@@ -2,7 +2,7 @@
 
 A small, local-first whiteboard for sketches, diagrams, and ideas.
 
-`draw` is a static browser app. It has no backend and no build step. Your drawing stays in the browser until you export it.
+`draw` is a static browser app with an optional Electron desktop shell. It has no backend. Your drawing stays in the current browser or desktop profile until you export it.
 
 ## Features
 
@@ -17,33 +17,53 @@ A small, local-first whiteboard for sketches, diagrams, and ideas.
 - Editable draw file export and PNG export.
 - Local profile name and initials.
 - Responsive layout with a mobile inspector drawer.
+- macOS desktop packaging through Electron.
 
 ## Quick start
 
 ### Requirements
 
-- Python 3 for the simplest local server.
+- Bun `1.4` or newer for project commands.
+- macOS for building the desktop distributables.
 - A modern browser with Canvas and local storage support.
 
-### Run with Python
+### Install
 
 ```sh
-python3 -m http.server 4173
+bun install
+```
+
+### Run in a browser
+
+```sh
+bun run web
 ```
 
 Open <http://127.0.0.1:4173>.
 
-### Run with npm
-
-The project has no npm dependencies. If npm is available, use either script:
+### Run the desktop app
 
 ```sh
-npm run dev
-# or
-npm start
+bun run desktop
 ```
 
-Both scripts start the same Python server on port `4173`.
+The desktop command opens the local app inside Electron. Browser and desktop versions share the same renderer and drawing behavior, but their local storage profiles are separate.
+
+## Package macOS builds
+
+Build an unpacked app for a fast smoke test:
+
+```sh
+bun run desktop:dir
+```
+
+Build unsigned macOS distributables:
+
+```sh
+bun run package:mac
+```
+
+The build writes a `.dmg` and `.zip` to `dist/`. The current configuration targets macOS only and intentionally does not configure code signing, notarization, Windows, or Linux targets.
 
 ## Controls
 
@@ -83,34 +103,40 @@ Hold `Space` while dragging to pan. Middle- or right-drag also pans. Use the zoo
 - `index.html` contains the app shell and static menus.
 - `styles.css` contains the visual system and responsive layout.
 - `app.js` contains drawing, rendering, state, persistence, and input handling.
-- `package.json` contains the optional local-server scripts.
+- `server.mjs` provides the dependency-free Bun development server.
+- `electron/main.cjs` creates the secure desktop window.
+- `build/icon.icns` provides the macOS app icon.
+- `package.json` contains Bun scripts and Electron Builder configuration.
+- `bun.lock` records the installed JavaScript toolchain.
 - `docs/` contains the user and development guides.
 
-Drawings and document history are stored in browser local storage. The profile name is stored separately. Clearing browser storage removes local drawings and profile data.
+Drawings and document history are stored in browser or desktop local storage. The profile name is stored separately. Clearing storage removes local drawings and profile data for that environment.
 
 The editable export is a draw-specific JSON format. It is not native Excalidraw file compatibility. Exported files contain the drawing, name, and document settings, but not the local undo and redo stacks.
 
 ## Development
 
-There is no dependency install, bundler, or build step.
+Useful commands:
 
 ```sh
-npm run dev
-node --check app.js
+bun run web
+bun run desktop
+bun run check
 ```
 
-Use the browser to verify changes on the real drawing surface. See [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md) for the working conventions and release checklist.
+There is no renderer bundler or backend. Electron Builder packages the static renderer and the Electron entrypoint for macOS. See [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md) for architecture, smoke checks, and the desktop release checklist.
 
 ## Distribution
 
-For a static deployment, serve the repository files from a web server. The app entry point is `index.html`.
+For browser distribution, serve the repository files from a web server. For desktop distribution, run `bun run package:mac` on macOS and share the generated artifacts from `dist/`.
 
-Before public distribution:
+Before distribution:
 
-1. Serve the app over HTTPS when hosted publicly.
+1. Install from the committed `bun.lock` and run the relevant smoke checks.
 2. Test drawing, erasing, history, export, import, themes, and mobile layout.
-3. Review the MIT terms in [`LICENSE`](LICENSE) before distributing the project.
-4. Keep commits focused and use the repository rules in [`AGENTS.md`](AGENTS.md).
+3. Test the unsigned desktop app separately from the browser app.
+4. Review the MIT terms in [`LICENSE`](LICENSE).
+5. Keep commits focused and use the repository rules in [`AGENTS.md`](AGENTS.md).
 
 ## License
 
