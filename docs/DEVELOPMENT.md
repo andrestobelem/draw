@@ -109,6 +109,11 @@ bun run package:mac
 
 Electron Builder writes the `.dmg` and `.zip` artifacts to `dist/`. The current configuration targets the host macOS architecture and does not configure code signing, notarization, Windows, or Linux targets.
 
+The GitHub Actions workflows use the `macos-15` Apple Silicon runner:
+
+- `CI` runs on pull requests and pushes to `main`. It installs the locked dependencies, runs `bun run check`, and builds an unpacked app with `bun run desktop:dir`.
+- `Release macOS` runs for tags matching `v*`. It checks the tag against `package.json`, runs `bun run package:mac`, and publishes the DMG and ZIP to GitHub Releases with the repository token.
+
 Release checklist:
 
 1. Run `bun install --frozen-lockfile` from the committed `bun.lock`.
@@ -117,6 +122,9 @@ Release checklist:
 4. Verify the Electron app launches and renders the same drawing surface.
 5. Test exporting and reopening a JSON file in both environments.
 6. Run `bun run package:mac` and inspect the generated artifacts.
-7. Review the MIT terms in [`LICENSE`](../LICENSE).
+7. Update the `version` in `package.json` and commit it.
+8. Create and push the matching tag, for example `git tag v1.0.0 && git push origin main --follow-tags`.
+9. Open the generated release at <https://github.com/andrestobelem/draw/releases/latest> and review the DMG and ZIP assets.
+10. Review the MIT terms in [`LICENSE`](../LICENSE).
 
-The app has no server-side configuration or environment variables. Browser deployment only needs a web server. Desktop packaging only needs macOS, Bun, and the locked dependencies.
+The app has no server-side configuration or environment variables. Browser deployment only needs a web server. Desktop packaging only needs macOS, Bun, and the locked dependencies. GitHub releases remain unsigned, so macOS may show a Gatekeeper warning on first launch.

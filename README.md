@@ -128,7 +128,22 @@ There is no renderer bundler or backend. Electron Builder packages the static re
 
 ## Distribution
 
-For browser distribution, serve the repository files from a web server. For desktop distribution, run `bun run package:mac` on macOS and share the generated artifacts from `dist/`.
+For browser distribution, serve the repository files from a web server. For local desktop distribution, run `bun run package:mac` on macOS and share the generated artifacts from `dist/`.
+
+### Automated macOS releases
+
+The `CI` workflow validates pull requests and pushes to `main` with the locked Bun dependencies, JavaScript syntax checks, and an unpacked macOS build. To publish a desktop release:
+
+1. Update the `version` in `package.json`.
+2. Commit the version change.
+3. Create a matching tag and push it with the commit:
+
+   ```sh
+   git tag v1.0.0
+   git push origin main --follow-tags
+   ```
+
+The `Release macOS` workflow checks that the tag matches `package.json`, builds on an Apple Silicon runner, and publishes the `.dmg` and `.zip` files to [GitHub Releases](https://github.com/andrestobelem/draw/releases/latest). Builds are macOS arm64 and unsigned; code signing, notarization, Windows, and Linux targets are intentionally not configured.
 
 Before distribution:
 
