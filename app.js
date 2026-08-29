@@ -78,6 +78,7 @@
   const toast = document.querySelector("#toast");
   const eraserCursor = document.querySelector("#eraser-cursor");
   const helpModal = document.querySelector("#help-modal");
+  const closeHelpButton = document.querySelector("#close-help-button");
   const dialogModal = document.querySelector("#dialog-modal");
   const dialogEyebrow = document.querySelector("#dialog-eyebrow");
   const dialogTitle = document.querySelector("#dialog-title");
@@ -454,6 +455,7 @@
   let toastTimer = null;
   let dialogRequest = null;
   let dialogRestoreFocus = null;
+  let helpRestoreFocus = null;
   let textEditor = null;
   let devicePixelRatio = Math.min(window.devicePixelRatio || 1, 2);
   let systemThemeQuery = null;
@@ -1021,6 +1023,31 @@
     return null;
   }
 
+  function eraseAt(world, erasedIds) {
+    const hit = hitTest(world, ERASER_RADIUS / state.appState.zoom);
+    if (!hit || erasedIds.has(hit.id)) return false;
+    erasedIds.add(hit.id);
+    state.elements = state.elements.filter((element) => element.id !== hit.id);
+    setSelection([], false);
+    return true;
+  }
+
+  function eraseAlongPath(start, end, erasedIds) {
+    const radius = ERASER_RADIUS / state.appState.zoom;
+    const distance = Math.hypot(end.x - start.x, end.y - start.y);
+    const steps = Math.max(1, Math.ceil(distance / Math.max(1, radius)));
+    let erased = false;
+    for (let index = 0; index <= steps; index += 1) {
+      const progress = index / steps;
+      const point = {
+        x: start.x + (end.x - start.x) * progress,
+        y: start.y + (end.y - start.y) * progress,
+      };
+      if (eraseAt(point, erasedIds)) erased = true;
+    }
+    return erased;
+  }
+
   function distanceToSegment(point, start, end) {
     const dx = end.x - start.x;
     const dy = end.y - start.y;
@@ -1283,14 +1310,19 @@
     }
 
     if (tool === "eraser") {
-      const hit = hitTest(world, ERASER_RADIUS / state.appState.zoom);
-      if (hit) {
-        const before = createHistorySnapshot();
-        state.elements = state.elements.filter((element) => element.id !== hit.id);
-        setSelection([], false);
-        commit(before, "Erased element");
-        showToast("Element erased");
-      }
+      const before = createHistorySnapshot();
+      const erasedIds = new Set();
+      pointer = {
+        kind: "erase",
+        pointerId: event.pointerId,
+        startWorld: world,
+        lastWorld: world,
+        before,
+        erasedIds,
+        moved: false,
+      };
+      canvas.setPointerCapture?.(event.pointerId);
+      if (eraseAt(world, erasedIds)) draw();
       return;
     }
 
@@ -1390,6 +1422,13 @@
       draw();
       return;
     }
+    if (pointer.kind === "erase") {
+      const lastWorld = pointer.lastWorld || pointer.startWorld;
+      pointer.moved = pointer.moved || Math.hypot(screen.x - worldToScreen(pointer.startWorld).x, screen.y - worldToScreen(pointer.startWorld).y) > 2;
+      if (eraseAlongPath(lastWorld, world, pointer.erasedIds)) draw();
+      pointer.lastWorld = world;
+      return;
+    }
     const distance = Math.hypot(screen.x - worldToScreen(pointer.startWorld || world).x, screen.y - worldToScreen(pointer.startWorld || world).y);
     pointer.moved = pointer.moved || distance > 2;
 
@@ -1459,6 +1498,17 @@
       }
       return;
     }
+    if (finished.kind === "erase") {
+      const count = finished.erasedIds.size;
+      if (count) {
+        const message = count === 1 ? "Erased element" : `Erased ${count} elements`;
+        commit(finished.before, message);
+        showToast(message);
+      } else {
+        renderAll({ save: false });
+      }
+      return;
+    }
     if (finished.kind === "create") {
       const created = state.elements.find((element) => element.id === finished.id);
       if (!created || isDegenerate(created)) {
@@ -1495,7 +1545,7 @@
     if (canceled.kind === "pan") {
       state.appState.viewX = canceled.viewX;
       state.appState.viewY = canceled.viewY;
-    } else if (canceled.kind === "create" || canceled.kind === "move" || canceled.kind === "resize") {
+    } else if (canceled.kind === "erase" || canceled.kind === "create" || canceled.kind === "move" || canceled.kind === "resize") {
       restoreHistorySnapshot(canceled.before);
     }
     if (canceled.pointerId != null && canvas.hasPointerCapture?.(canceled.pointerId)) {
@@ -1742,6 +1792,26 @@
     profileButton.setAttribute("aria-expanded", "false");
   }
 
+  function showHelpModal() {
+    if (!helpModal.hidden) return;
+    helpRestoreFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    closePopovers();
+    helpModal.hidden = false;
+    window.requestAnimationFrame(() => {
+      if (!helpModal.hidden) closeHelpButton.focus({ preventScroll: true });
+    });
+  }
+
+  function hideHelpModal() {
+    if (helpModal.hidden) return;
+    helpModal.hidden = true;
+    const focusTarget = helpRestoreFocus;
+    helpRestoreFocus = null;
+    if (focusTarget && focusTarget.isConnected) {
+      window.requestAnimationFrame(() => focusTarget.focus({ preventScroll: true }));
+    }
+  }
+
   function finishDialog(value) {
     const request = dialogRequest;
     if (!request) return;
@@ -1864,15 +1934,19 @@
   async function shareDrawing() {
     const data = serializedState();
     try {
-      if (navigator.share) {
+      if (typeof navigator.share === "function") {
         await navigator.share({ title: state.name, text: data });
         showToast("Sketch shared");
         return;
       }
+      if (typeof navigator.clipboard?.writeText !== "function") {
+        showToast("Sharing is unavailable in this browser");
+        return;
+      }
       await navigator.clipboard.writeText(data);
       showToast("Sketch data copied to clipboard");
-    } catch {
-      showToast("Sharing was cancelled");
+    } catch (error) {
+      showToast(error?.name === "AbortError" ? "Sharing was cancelled" : "Sharing failed");
     }
   }
 
@@ -2171,6 +2245,13 @@
   }
 
   function handleKeyDown(event) {
+    if (!helpModal.hidden) {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        hideHelpModal();
+      }
+      return;
+    }
     if (dialogRequest) {
       if (event.key === "Escape") {
         event.preventDefault();
@@ -2183,10 +2264,6 @@
     const modifier = event.metaKey || event.ctrlKey;
 
     if (event.key === "Escape") {
-      if (!helpModal.hidden) {
-        helpModal.hidden = true;
-        return;
-      }
       if (textEditor) {
         finishTextEditor(false);
         return;
@@ -2260,7 +2337,7 @@
       return;
     }
     if (event.key === "?") {
-      helpModal.hidden = false;
+      showHelpModal();
       return;
     }
     const nextTool = toolShortcuts[event.key.toLowerCase()];
@@ -2320,9 +2397,9 @@
   document.querySelector("#profile-reset-button").addEventListener("click", resetProfile);
   document.querySelector("#library-button").addEventListener("click", () => showToast("Library is ready for your next sketch"));
   document.querySelector("#share-button").addEventListener("click", shareDrawing);
-  document.querySelector("#help-button").addEventListener("click", () => { closePopovers(); helpModal.hidden = false; });
-  document.querySelector("#close-help-button").addEventListener("click", () => { helpModal.hidden = true; });
-  document.querySelector("#help-done-button").addEventListener("click", () => { helpModal.hidden = true; });
+  document.querySelector("#help-button").addEventListener("click", showHelpModal);
+  closeHelpButton.addEventListener("click", hideHelpModal);
+  document.querySelector("#help-done-button").addEventListener("click", hideHelpModal);
   document.querySelector("#export-png-button").addEventListener("click", exportPng);
   document.querySelector("#export-json-button").addEventListener("click", exportJson);
   document.querySelector("#new-drawing-button").addEventListener("click", resetDrawing);
@@ -2341,7 +2418,7 @@
     if (!insidePopover) closePopovers();
   });
   helpModal.addEventListener("click", (event) => {
-    if (event.target === helpModal) helpModal.hidden = true;
+    if (event.target === helpModal) hideHelpModal();
   });
   dialogCancelButton.addEventListener("click", () => {
     if (!dialogRequest) return;
