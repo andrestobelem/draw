@@ -24,6 +24,7 @@ A small, local-first whiteboard for sketches, diagrams, and ideas.
 ### Requirements
 
 - Bun `1.4` or newer for source development and packaging.
+- Node.js `22.12.0` or newer for syntax checks, Electron, and packaging.
 - macOS for desktop packaging. Published desktop builds target Apple Silicon (`arm64`).
 - A modern browser with Canvas and local storage support.
 

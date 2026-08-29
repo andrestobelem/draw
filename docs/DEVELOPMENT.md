@@ -30,7 +30,7 @@ The renderer has no framework, backend, or bundler. Electron Builder packages th
 
 ## Tooling
 
-Use Bun `1.4.0` or newer for project commands. Install the committed dependency versions before running checks:
+Use Bun `1.4.0` or newer and Node.js `22.12.0` or newer for project commands. Install the committed dependency versions before running checks:
 
 ```sh
 bun install --frozen-lockfile
