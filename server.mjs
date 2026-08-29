@@ -1,7 +1,18 @@
-import { extname, join, normalize, sep } from "node:path";
+import { extname, join } from "node:path";
 
 const root = process.cwd();
-const port = Number(process.env.PORT || 4173);
+const requestedPort = Number(process.env.PORT || 4173);
+if (!Number.isInteger(requestedPort) || requestedPort < 1 || requestedPort > 65535) {
+  console.error("PORT must be an integer between 1 and 65535");
+  process.exit(1);
+}
+const port = requestedPort;
+const publicFiles = Object.freeze({
+  "/": "index.html",
+  "/index.html": "index.html",
+  "/styles.css": "styles.css",
+  "/app.js": "app.js",
+});
 const contentTypes = {
   ".css": "text/css; charset=utf-8",
   ".html": "text/html; charset=utf-8",
@@ -20,16 +31,17 @@ function notFound() {
 }
 
 async function serveFile(pathname) {
-  let relativePath;
+  let decodedPath;
   try {
-    relativePath = decodeURIComponent(pathname).replace(/^\/+/, "") || "index.html";
+    decodedPath = decodeURIComponent(pathname);
   } catch {
     return notFound();
   }
 
-  const filePath = normalize(join(root, relativePath));
-  if (filePath !== root && !filePath.startsWith(`${root}${sep}`)) return notFound();
+  const relativePath = publicFiles[decodedPath];
+  if (typeof relativePath !== "string") return notFound();
 
+  const filePath = join(root, relativePath);
   const file = Bun.file(filePath);
   if (!(await file.exists())) return notFound();
 
