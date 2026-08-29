@@ -37,7 +37,7 @@ Open <http://127.0.0.1:4173> and test the app through the browser. Do not open `
 ## Implementation notes
 
 - The app keeps document data in a single state object containing the drawing name, elements, and app state.
-- History stores complete snapshots so undo and redo cover document and view changes consistently.
+- History stores complete snapshots for document and style state. View navigation (`zoom`, `viewX`, `viewY`) is transient and is not part of undo and redo snapshots.
 - Browser local storage persists the current document, history, redo history, and profile data.
 - Canvas coordinates are transformed through the current view offset and zoom.
 - The inspector renders controls from the current selection and app defaults.
@@ -83,6 +83,6 @@ Commit rules are recorded in [`AGENTS.md`](../AGENTS.md): use Conventional Commi
 4. Test exporting and reopening a JSON file.
 5. Confirm that no debug UI or temporary files are included.
 6. Serve the static files from the deployment host.
-7. Add a license before public redistribution.
+7. Review the MIT terms in [`LICENSE`](../LICENSE) before public redistribution.
 
 The app has no server-side configuration or environment variables. Deployment only needs a web server that can serve `index.html`, `styles.css`, and `app.js`.

@@ -109,9 +109,9 @@ Before public distribution:
 
 1. Serve the app over HTTPS when hosted publicly.
 2. Test drawing, erasing, history, export, import, themes, and mobile layout.
-3. Add a license that matches the intended distribution terms.
+3. Review the MIT terms in [`LICENSE`](LICENSE) before distributing the project.
 4. Keep commits focused and use the repository rules in [`AGENTS.md`](AGENTS.md).
 
 ## License
 
-No license file is included yet. Choose and add a license before publishing the project for reuse.
+This project is licensed under the MIT License. See [`LICENSE`](LICENSE) for the full terms.
