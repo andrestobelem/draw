@@ -156,9 +156,9 @@ The `CI` workflow validates pull requests and pushes to `main` with the locked B
    git push origin main --follow-tags
    ```
 
-The `Release macOS` workflow checks that the tag matches `package.json`, builds on an Apple Silicon runner, and publishes the `.dmg` and `.zip` files to [GitHub Releases](https://github.com/andrestobelem/draw/releases/latest). Builds are unsigned; macOS may show a Gatekeeper warning on first launch.
+The `Release macOS` workflow requires an annotated tag, checks that the tag matches `package.json`, builds on an Apple Silicon runner, and publishes the `.dmg` and `.zip` files to [GitHub Releases](https://github.com/andrestobelem/draw/releases/latest). Builds are unsigned; macOS may show a Gatekeeper warning on first launch.
 
-The current published release is [`v1.0.0`](https://github.com/andrestobelem/draw/releases/tag/v1.0.0).
+The current published release is [`v1.0.0`](https://github.com/andrestobelem/draw/releases/tag/v1.0.0) and predates the workflow's annotated-tag validation.
 
 ## License
 

@@ -133,7 +133,7 @@ Use **Export** in the top bar for image and editable-file exports:
 - **PNG image** downloads a raster image with the current whiteboard background.
 - **Draw file** downloads an app-specific `.excalidraw.json` JSON file for later editing.
 
-**Share** uses the browser share sheet when available. Otherwise, it copies the serialized drawing data to the clipboard. Sharing is not a cloud upload.
+**Share** uses the browser share sheet when available. Otherwise, it copies the serialized drawing data to the clipboard when the Clipboard API is available in a secure context; if not, it reports that sharing is unavailable. Sharing is not a cloud upload.
 
 The editable JSON format is specific to this app. It is not native Excalidraw file compatibility. It preserves the drawing, name, and document settings, but not browser-local undo and redo history.
 

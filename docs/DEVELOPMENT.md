@@ -60,7 +60,7 @@ The desktop shell loads `index.html` directly. Its renderer keeps Node integrati
 - The inspector renders canvas defaults when nothing is selected and element properties when elements are selected.
 - The mobile inspector is a clipped drawer. The workspace owns the positioning context so the closed drawer does not expand the page width.
 - Export uses browser downloads. Editable files use the app-specific `.excalidraw.json` format and PNG export uses the current canvas background.
-- Share uses the Web Share API when available and clipboard text as the fallback.
+- Share uses the Web Share API when available and clipboard text as the fallback when the Clipboard API is available in a secure context; otherwise it reports that sharing is unavailable.
 - `electron/main.cjs` only owns the application window lifecycle. Keep renderer behavior in the existing browser files unless native integration is required.
 
 When changing an exported symbol, inspect all references before editing it. Keep state transitions in the existing history path instead of adding one-off mutations.
@@ -81,7 +81,7 @@ Then run the app and exercise the changed behavior on the real canvas. At minimu
 - Undo and redo, including canceled transforms and marquee selections.
 - Rename, new drawing, open file, save to device, PNG export, and share fallback.
 - Canvas background, element styles, text properties, pen assistance, and theme controls.
-- Eraser cursor and edge hit testing.
+- Eraser cursor, click, drag, and edge hit testing.
 - Mobile layout at a narrow viewport, including the inspector drawer.
 - Electron launch and local storage in the desktop profile.
 
@@ -116,7 +116,7 @@ Local Electron Builder builds target the host macOS architecture. They write the
 The GitHub Actions workflows are:
 
 - `CI` runs on pull requests and pushes to `main`. It installs the locked dependencies, runs `bun run check`, and builds an unpacked app with `bun run desktop:dir`.
-- `Release macOS` runs for tags matching `v*`. It checks the tag against `package.json`, runs `bun run package:mac`, and publishes the DMG and ZIP to GitHub Releases with the repository `GITHUB_TOKEN`.
+- `Release macOS` runs for tags matching `v*`. It requires an annotated tag, checks it against `package.json`, runs `bun run package:mac`, and publishes the DMG and ZIP to GitHub Releases with the repository `GITHUB_TOKEN`.
 
 No signing or notarization secrets are configured. The release workflow intentionally does not target Windows or Linux.
 
@@ -142,4 +142,4 @@ Release checklist:
 
 The renderer has no server-side configuration or environment variables. The local Bun server accepts only the optional `PORT`; browser deployment only needs a web server. GitHub releases remain unsigned, so macOS may show a Gatekeeper warning on first launch.
 
-The current published release is [`v1.0.0`](https://github.com/andrestobelem/draw/releases/tag/v1.0.0). See [`README.md`](../README.md) for the user-facing download path and [`USER_GUIDE.md`](USER_GUIDE.md) for app usage.
+The current published release is [`v1.0.0`](https://github.com/andrestobelem/draw/releases/tag/v1.0.0) and predates the workflow's annotated-tag validation. See [`README.md`](../README.md) for the user-facing download path and [`USER_GUIDE.md`](USER_GUIDE.md) for app usage.
