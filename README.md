@@ -139,7 +139,7 @@ The `CI` workflow validates pull requests and pushes to `main` with the locked B
 3. Create a matching tag and push it with the commit:
 
    ```sh
-   git tag v1.0.0
+   git tag -a v1.0.0 -m "Release v1.0.0"
    git push origin main --follow-tags
    ```
 

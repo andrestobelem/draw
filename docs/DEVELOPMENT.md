@@ -123,7 +123,7 @@ Release checklist:
 5. Test exporting and reopening a JSON file in both environments.
 6. Run `bun run package:mac` and inspect the generated artifacts.
 7. Update the `version` in `package.json` and commit it.
-8. Create and push the matching tag, for example `git tag v1.0.0 && git push origin main --follow-tags`.
+8. Create and push the matching annotated tag, for example `git tag -a v1.0.0 -m "Release v1.0.0" && git push origin main --follow-tags`.
 9. Open the generated release at <https://github.com/andrestobelem/draw/releases/latest> and review the DMG and ZIP assets.
 10. Review the MIT terms in [`LICENSE`](../LICENSE).
 
